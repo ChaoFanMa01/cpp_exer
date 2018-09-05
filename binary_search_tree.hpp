@@ -40,6 +40,7 @@ namespace my {
         binary_search_tree(const binary_search_tree& bst);
         binary_search_tree(binary_search_tree&& bst);
         binary_search_tree(std::initializer_list<value_type> il);
+        ~binary_search_tree() {destroy_subtree(root);}
 
         // operators.
         binary_search_tree &operator=(const binary_search_tree& bst);
@@ -48,6 +49,7 @@ namespace my {
         // operations.
         void insert(const value_type& k);
         void insert(value_type&& k);
+        void remove(const value_type& k);
         void print(void) const {print_subtree(root, 0);}
 
         size_type size(void) const {return _size;}
@@ -57,6 +59,10 @@ namespace my {
         node* destroy_subtree(node* rt);
         void print_subtree(const node* rt, size_type depth) const;
         void print_n_space(size_type n) const;
+        node* find_parent(const node* nd) const;
+        node* find_node(const value_type& k) const;
+        node* find_min_node(const node* rt) const;
+        node* find_max_node(const node* rt) const;
     private:
         node*         root;
         size_type     _size;
@@ -206,6 +212,119 @@ namespace my {
     binary_search_tree<T>::print_n_space(size_type n) const {
         for (size_type i = 0; i < n; ++i)
             std::cout << " ";
+    }
+
+    template <typename T>
+    typename binary_search_tree<T>::node *
+    binary_search_tree<T>::find_parent(const node* nd) const {
+        node* cnt = root;
+// TODO if (nd == nullptr) throw except;
+        if (cnt == nd)
+            return nullptr;
+        while (true) {
+            if (nd->key > cnt->key) {
+                if (nd->key == cnt->right->key)
+                    return cnt;
+                cnt = cnt->right;
+            } else {
+                if (nd->key == cnt->left->key)
+                    return cnt;
+                cnt = cnt->left;
+            }
+        }
+    }
+
+    template <typename T>
+    typename binary_search_tree<T>::node *
+    binary_search_tree<T>::find_node(const value_type& k) const {
+        node* nd = root;
+
+        if (root == nullptr)
+            return nullptr;
+
+        while (true)
+            if (nd->key == k) {
+                return nd;
+            } else if (nd->key < k) {
+                if (nd->right != nullptr)
+                    nd = nd->right;
+                else
+                    return nullptr;
+            } else {
+                if (nd->left != nullptr)
+                    nd = nd->left;
+                else
+                    return nullptr;
+            }
+        return nullptr;
+    }
+
+    template <typename T>
+    typename binary_search_tree<T>::node*
+    binary_search_tree<T>::find_min_node(const node* rt) const {
+        node *nd = rt;
+
+        while (nd->left != nullptr)
+            nd = nd->left;
+
+        return nd;
+    }
+
+    template <typename T>
+    typename binary_search_tree<T>::node*
+    binary_search_tree<T>::find_max_node(const node* rt) const {
+        node* nd = rt;
+
+        while (nd->right != nullptr)
+            nd = nd->right;
+
+        return nd;
+    }
+
+    template <typename T>
+    void
+    binary_search_tree<T>::remove(const value_type& val) {
+        node* nd, *pa, *min;
+
+        if (!(nd = find_node(val)))
+            return;
+        pa = find_parent(nd);
+        if (nd->left == nullptr) {
+            // root is the node to be deleted.
+            if (pa == nullptr) {
+                root = root->right;
+            } else {
+                if (nd == pa->right)
+                    pa->right = nd->right;
+                else
+                    pa->left = nd->right;
+            }
+        } else if (nd->right == nullptr) {
+            if (pa == nullptr) {
+                root = root->left;
+            } else {
+                if (nd == pa->right)
+                    pa->right = nd->left;
+                else
+                    pa->left = nd->left;
+            }
+        } else {
+            if ((min = find_min_node(nd->right)) != nd->right) {
+                node* ppa = find_parent(min);
+                ppa->left = min->right;
+                min->right = nd->right;
+            }
+            min->left = nd->left;
+            if (pa == nullptr)
+                root = min;
+            else
+                if (nd == pa->right)
+                    pa->right = min;
+                else
+                    pa->left =min;
+        }
+        delete nd;
+        --_size;
     }
 }
 
