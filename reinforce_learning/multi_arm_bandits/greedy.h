@@ -14,11 +14,12 @@ namespace rl {
     class Greedy {
     public:
         Greedy(size_type, size_type);
-        void run(StationaryNArmedBandit&);
+        virtual void run(StationaryNArmedBandit&);
         void print_result();
-    private:
+        virtual ~Greedy() = default;
+    protected:
         void update_estimates();
-    private:
+    protected:
         /* the historical rewards. */
         std::vector<reward_type>    _values;
         /* the estimated values for current step. */
